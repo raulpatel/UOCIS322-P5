@@ -3,13 +3,11 @@ version: '3'
 services:
     web:
         build: .
-        command: -u flask_brevets.py
+        command: python -u flask_brevets.py
         ports:
             - "5000:5000"
         depends_on:
             - ourdb
-            - /templates/calc.html
-            - flask_brevets.py
         environment:
             MONGODB_HOSTNAME: ourdb
     ourdb:

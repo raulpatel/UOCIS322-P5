@@ -6,7 +6,7 @@ Replacement for RUSA ACP brevet time calculator
 
 import flask
 import os
-from flask import request, redirect, url_for, request
+from flask import request, redirect, url_for, request, render_template
 from pymongo import MongoClient
 import arrow  # Replacement for datetime, based on moment.js
 import acp_times  # Brevet time calculations
@@ -38,25 +38,37 @@ def page_not_found(error):
     app.logger.debug("Page not found")
     return flask.render_template('404.html'), 404
 
-@app.route('/submit/', methods=['POST'])
+@app.route('/submit', methods=['POST'])
 def submit():
+    index = request.form['index']
+    km = request.form['km']
+    open_time = ""
+    close_time = ""
+    brev_dist = request.form['dist']
+    start_time = request.form['start']
+    
+    """if km <= (brev_dist * 1.2):
+        open_time = acp_times.open_time(km, int(brev_dist), arrow.get(start)).format('YYYY-MM-DDTHH:mm')
+        close_time = acp_times.close_time(km, int(brev_dist), arrow.get(start)).format('YYYY-MM-DDTHH:mm')
+    else:
+        valid = 0"""
+
     item_doc = {
-        'km': request.form['km'],
-        'open': request.form['open'],
-        'close': request.form['close'],
-        #'body': request.form['body']
+        #'valid': valid,
+        'index': index,
+        'km': km,
+        'open': open_time,
+        'close': close_time
     }
-    if item_doc['km'] != "":
+    if request.form['km'] != "":
         db.tododb.insert_one(item_doc)
 
-    return redirect(url_for('/_calc_times'))
+    return redirect(url_for('/index'))
 
-@app.route('/display/', methods=['POST'])
+@app.route('/display')
 def display():
-    item_doc = db.tododb.find_one()
-    print(item_doc)
 
-    return redirect(url_for('/'))
+    return render_template('calc.html', items=list(db.tododb.find()))
 
 ###############
 #
@@ -64,13 +76,13 @@ def display():
 #   These return JSON, rather than rendering pages.
 #
 ###############
-@app.route("/_calc_times")
+"""@app.route("/_calc_times")
 def _calc_times():
-    """
+    """"""
     Calculates open/close times from miles, using rules
     described at https://rusa.org/octime_alg.html.
     Expects one URL-encoded argument, the number of miles.
-    """
+    """"""
     app.logger.debug("Got a JSON request")
     km = request.args.get('km', 999, type=float) // 1
     start = request.args.get('start')
@@ -92,7 +104,7 @@ def _calc_times():
         open_time = ""
         close_time = ""
     result = {"valid": valid, "open": open_time, "close": close_time}
-    return flask.jsonify(result=result)
+    return flask.jsonify(result=result)"""
 
 
 #############

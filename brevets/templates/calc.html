@@ -63,15 +63,13 @@
                   </select>
                </div>
                <!-- columns 1 to 4  -->
-               <div class="col-md-5">
+               <div class="col-md-4">
                   <label>Begins at</label>
                   <input type="datetime-local" name="begin_date" id="begin_date" value="2021-01-01T00:00" />
                </div>
-               <div class="col-md-1" id="submit">
-                    <button method="POST" action="/submit/">Submit</button>
-               </div>
-               <div class="col-md-1" id="display">
-                    <button method="POST" action="/display/">Display</button>
+               <div class="col-md-4">
+                    <button method="POST" id="submit" action="/submit">Submit</button>
+                    <button id="display">Display</button>
                </div>
                <!-- columns 5 to 10 -->
             </div>
@@ -105,9 +103,25 @@
                            placeholder="Optional location name"
                            size="20" /> </td>
                         <!-- Open time (read only, set by JavaScript function -->
-                        <td><input name="open" type="datetime-local" readonly value="" /></td>
+                        <td>
+                            <input name="open" type="datetime-local" readonly value="">
+                                {% for article in items %}
+                                {% if article.index == row %}
+                                {{ article.open }}
+                                {% endif %}
+                                {% endfor %}
+                            </input>
+                        </td>
                         <!-- Close time (read only, set by JavaScript function -->
-                        <td><input name="close" type="datetime-local" readonly value="" /></td>
+                        <td>
+                            <input name="close" type="datetime-local" readonly value="">
+                                {% for article in items %}
+                                {% if article.index == row %}
+                                {{ article.close }}
+                                {% endif %}
+                                {% endfor %}
+                            </input>
+                        </td>
                         <!-- Notes (error messages for this row) -->
                         <td class="notes"> &nbsp; </td>
                      </tr>
@@ -126,7 +140,7 @@
             // Right now, only the kilometers are passed
             // you need to pass much more!
             // View flask_brevets.py for details.
-            function calc_times(control) {
+            /*function calc_times(control) {
               var km = control.find("input[name='km']").val();
               var start = $("#begin_date").val();
               var brev_dist = $("#brevet_dist_km").val();
@@ -158,7 +172,7 @@
                  console.log("Error!");
                  console.log(err);
                });
-            }
+            }*/
 
             $(document).ready(function() {
                // Do the following when the page is finished loading
@@ -171,8 +185,13 @@
                           var control_entry = $(this).parents(".control")
                           var target = control_entry.find("input[name='km']");
                           target.val(km);
+                          if (km > (1.2 * $("#brevet_dist_km").val())) {
+                                $(this).val("");
+                                $(target).val("");
+                                $("#message").text("Control distance cannot be longer than the brevet distance.");
+                          } 
                           // Then calculate times for this entry
-                          calc_times(control_entry);
+                          //calc_times(control_entry);
                        });
 
                $('input[name="km"]').change(
@@ -183,8 +202,13 @@
                           var control_entry = $(this).parents(".control")
                           var target = control_entry.find("input[name='miles']");
                           target.val(miles);
+                          if (km > (1.2 * $("#brevet_dist_km").val())) {
+                                $(this).val("");
+                                $(target).val("");
+                                $("#message").text("Control distance cannot be longer than the brevet distance.");
+                          }
                           // Then calculate times for this entry
-                          calc_times(control_entry);
+                          //calc_times(control_entry);
                        });
 
             });
@@ -192,15 +216,7 @@
             $('#display').click(
                 function(e){
                     e.preventDefault();
-                    $('.control').each(
-                        function(index, obj)
-                        {
-                            $.post("/display/", {index: index, km: $(obj).find("input[name='km']").val()}, function(response){console.log("response: ", response)}, "json");
-                            console.log(index,
-                                $(obj).find("input[name='km']").val(),
-                                $(obj).find("input[name='open']").val(),
-                                $(obj).find("input[name='close']").val());
-                        });
+                    window.location.href = '/display'; 
                 }
             );
 
@@ -211,11 +227,11 @@
                         function(index, obj)
                         {
                             if ($(obj).find("input[name='km']").val() != "") {
-                                $.post("/submit/", {index: index, km: $(obj).find("input[name='km']").val()}, function(response){console.log("response: ", response)}, "json");
+                                $.post("/submit", {index: index, km: $(obj).find("input[name='km']").val(), dist: $("#brevet_dist_km").val(), start: $("#begin_date").val()}, function(response){console.log("response: ", response)}, "json");
                                 console.log(index,
                                     $(obj).find("input[name='km']").val(),
-                                    $(obj).find("input[name='open']").val(),
-                                    $(obj).find("input[name='close']").val());
+                                    $("#brevet_dist_km").val(),
+                                    $("#begin_date").val());
                             }
                         });
                 }
