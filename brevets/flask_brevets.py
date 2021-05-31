@@ -38,23 +38,24 @@ def page_not_found(error):
     app.logger.debug("Page not found")
     return flask.render_template('404.html'), 404
 
-@app.route('/submit', methods=['POST'])
+@app.route('/clear/', methods=['GET'])
+def clear():
+    db.tododb.delete_many({})
+    return redirect(url_for('index'))
+
+@app.route('/submit/', methods=['POST'])
 def submit():
-    index = request.form['index']
-    km = request.form['km']
+    index = int(request.form['index'])
+    km = float(request.form['km'])
     open_time = ""
     close_time = ""
-    brev_dist = request.form['dist']
+    brev_dist = int(request.form['dist'])
     start_time = request.form['start']
     
-    """if km <= (brev_dist * 1.2):
-        open_time = acp_times.open_time(km, int(brev_dist), arrow.get(start)).format('YYYY-MM-DDTHH:mm')
-        close_time = acp_times.close_time(km, int(brev_dist), arrow.get(start)).format('YYYY-MM-DDTHH:mm')
-    else:
-        valid = 0"""
+    open_time = acp_times.open_time(km, brev_dist, arrow.get(start_time)).format('YYYY-MM-DDTHH:mm')
+    close_time = acp_times.close_time(km, brev_dist, arrow.get(start_time)).format('YYYY-MM-DDTHH:mm')
 
     item_doc = {
-        #'valid': valid,
         'index': index,
         'km': km,
         'open': open_time,
@@ -63,12 +64,23 @@ def submit():
     if request.form['km'] != "":
         db.tododb.insert_one(item_doc)
 
-    return redirect(url_for('/index'))
+    return redirect(url_for('index'))
 
-@app.route('/display')
+@app.route('/display/', methods=['GET'])
 def display():
-
-    return render_template('calc.html', items=list(db.tododb.find()))
+    #rows = tuple(db.tododb.find())
+    #app.logger.debug(rows.join(", "))
+    """for i in range(len(rows)):
+        rows[i] = flask.jsonify(result=rows[i])"""
+    ind = request.args.get('ind', type=int)
+    row = db.tododb.find_one({'index': ind})
+    if row:
+        row = dict(row)
+        row['_id'] = str(row['_id'])
+        app.logger.debug(row)
+        return flask.jsonify(result=row) # render_template('calc.html', items=list(db.tododb.find()))
+    else:
+        return ""
 
 ###############
 #

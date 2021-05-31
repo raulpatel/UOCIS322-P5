@@ -68,7 +68,7 @@
                   <input type="datetime-local" name="begin_date" id="begin_date" value="2021-01-01T00:00" />
                </div>
                <div class="col-md-4">
-                    <button method="POST" id="submit" action="/submit">Submit</button>
+                    <button method="POST" id="submit" action="/submit/">Submit</button>
                     <button id="display">Display</button>
                </div>
                <!-- columns 5 to 10 -->
@@ -106,9 +106,9 @@
                         <td>
                             <input name="open" type="datetime-local" readonly value="">
                                 {% for article in items %}
-                                {% if article.index == row %}
-                                {{ article.open }}
-                                {% endif %}
+                                    {% if (article.index | int) == row %}
+                                        {{ article.open }}
+                                    {% endif %}
                                 {% endfor %}
                             </input>
                         </td>
@@ -116,9 +116,9 @@
                         <td>
                             <input name="close" type="datetime-local" readonly value="">
                                 {% for article in items %}
-                                {% if article.index == row %}
-                                {{ article.close }}
-                                {% endif %}
+                                    {% if (article.index | int) == row %}
+                                        {{ article.close }}
+                                    {% endif %}
                                 {% endfor %}
                             </input>
                         </td>
@@ -189,7 +189,8 @@
                                 $(this).val("");
                                 $(target).val("");
                                 $("#message").text("Control distance cannot be longer than the brevet distance.");
-                          } 
+                          }
+                          else {$("#message").text("");}
                           // Then calculate times for this entry
                           //calc_times(control_entry);
                        });
@@ -207,6 +208,7 @@
                                 $(target).val("");
                                 $("#message").text("Control distance cannot be longer than the brevet distance.");
                           }
+                          else {$("#message").text("");}
                           // Then calculate times for this entry
                           //calc_times(control_entry);
                        });
@@ -216,24 +218,43 @@
             $('#display').click(
                 function(e){
                     e.preventDefault();
-                    window.location.href = '/display'; 
+                    //window.location.href = '/display/';
+                    $('.control').each(function(index, obj) 
+                    {
+                        $.get("/display/", {ind: index}).done(
+                            function(data)
+                            { 
+                                if (data == "") {
+                                    return;
+                                }
+                                if (data.result.index == index) { 
+                                    $(obj).find("input[name='open']").val(data.result.open); 
+                                    $(obj).find("input[name='close']").val(data.result.close);
+                                    console.log("Updated index:  ", index, "  with open time:  ", data.result.open, "  and close time:  ", data.result.close); 
+                                } 
+                            }); 
+                    });                 
                 }
             );
 
             $('#submit').click(
                 function(e){
                     e.preventDefault();
+                    $.get("/clear/");
+                    var ctr = 0;
                     $('.control').each(
                         function(index, obj)
                         {
                             if ($(obj).find("input[name='km']").val() != "") {
-                                $.post("/submit", {index: index, km: $(obj).find("input[name='km']").val(), dist: $("#brevet_dist_km").val(), start: $("#begin_date").val()}, function(response){console.log("response: ", response)}, "json");
+                                $.post("/submit/", {index: index, km: $(obj).find("input[name='km']").val(), dist: $("#brevet_dist_km").val(), start: $("#begin_date").val()}, function(response){console.log("response: ", response)}, "json");
                                 console.log(index,
                                     $(obj).find("input[name='km']").val(),
                                     $("#brevet_dist_km").val(),
                                     $("#begin_date").val());
+                                ctr++;
                             }
                         });
+                    if (ctr == 0) $("#message").text("You must have some entries before submitting.");
                 }
             );
 

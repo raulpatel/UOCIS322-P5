@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>Blog!</title>
+        <title>Display!</title>
     </head>
     <body>
         <div>
@@ -19,11 +19,14 @@
         <div>
             {% for article in items %}
             <div>
-                <h1>{{ article.title }}</h1>
-                <p>{{ article.body }}</p>
+                <h1>{{ article.index }}</h1>
+                <p>{{ article.km }}</p>
+                <p>{{ article.open }}</p>
+                <p>{{ article.close }}</p>
                 <hl />
             </div>
             {% endfor %}
+            <a href="/">Go Back</a>
         </div>
     </body>
 </html>
