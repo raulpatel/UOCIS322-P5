@@ -240,21 +240,24 @@
             $('#submit').click(
                 function(e){
                     e.preventDefault();
-                    $.get("/clear/");
-                    var ctr = 0;
-                    $('.control').each(
-                        function(index, obj)
+                    $.get("/clear/").done(
+                        function() 
                         {
-                            if ($(obj).find("input[name='km']").val() != "") {
-                                $.post("/submit/", {index: index, km: $(obj).find("input[name='km']").val(), dist: $("#brevet_dist_km").val(), start: $("#begin_date").val()}, function(response){console.log("response: ", response)}, "json");
-                                console.log(index,
-                                    $(obj).find("input[name='km']").val(),
-                                    $("#brevet_dist_km").val(),
-                                    $("#begin_date").val());
-                                ctr++;
-                            }
+                            let ctr = 0;
+                            $('.control').each(
+                                function(index, obj)
+                                {
+                                    if ($(obj).find("input[name='km']").val() != "") {
+                                        $.post("/submit/", {index: index, km: $(obj).find("input[name='km']").val(), dist: $("#brevet_dist_km").val(), start: $("#begin_date").val()}, function(response){console.log("response: ", response)}, "json");
+                                        console.log(index,
+                                        $(obj).find("input[name='km']").val(),
+                                        $("#brevet_dist_km").val(),
+                                        $("#begin_date").val());
+                                        ctr++;
+                                    }
+                                });
+                            if (ctr == 0) $("#message").text("You must have some entries before submitting.");
                         });
-                    if (ctr == 0) $("#message").text("You must have some entries before submitting.");
                 }
             );
 
